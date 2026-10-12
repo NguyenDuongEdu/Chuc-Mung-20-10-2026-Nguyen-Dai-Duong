@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>1 ngày bình thường như bao ngày 🌷</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Tối ưu giao diện để hiển thị lớp nền vũ trụ 3D phía sau */
+        body {
+            background-color: #02020a !important; /* Đảm bảo đồng bộ màu tối vũ trụ */
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        /* Đẩy canvas vũ trụ xuống làm lớp nền dưới cùng */
+        #skyCanvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Luôn nằm dưới các phần tử nội dung */
+            pointer-events: auto; /* Cho phép nhận tương tác chuột để xoay camera */
+        }
+
+        /* Đảm bảo các section nội dung có nền trong suốt để lộ vũ trụ */
+        .section, .hero {
+            background: transparent !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Giữ các tương tác nút bấm và chữ hiển thị sắc nét */
+        .hero-content {
+            position: relative;
+            z-index: 3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         NỀN VŨ TRỤ 3D 
+    ========================== -->
+    <canvas id="skyCanvas"></canvas>
+
+    <!-- =========================
+         NHẠC
+    ========================== -->
+
+    <audio id="bgMusic" loop>
+        <source src="./images/tiktok_audio.mp3" type="audio/mpeg">
+    </audio>
+
+    <button id="musicBtn" class="music-btn">
+        🎵
+    </button>
+
+
+    <!-- =========================
+         HOA RƠI
+    ========================== -->
+
+    <div id="petals"></div>
+
+
+    <!-- =========================
+         PROGRESS
+    ========================== -->
+
+    <div class="progress">
+        <div id="progressBar"></div>
+    </div>
+
+
+    <!-- =========================
+         SECTION 1
+    ========================== -->
+
+    <!-- ========================= SECTION 1 ========================== -->
+<section class="section hero" id="section1">
+    <div class="hero-content">
+        <!-- Khung chứa nội dung ban đầu (Sẽ ẩn đi khi bấm) -->
+        <div id="mainIntro">
+            <div class="small-text"> 20 • 10 • 2026 </div>
+            <h1> Chào mừng bạn đến với...<br>Trạm Không Gian 20/10 ✨ </h1>
+            <p class="sub-text"> 
+                Một chút giai điệu ngọt ngào và món quà nhỏ gửi tặng các nữ đồng nghiệp tuyệt vời hôm nay! 
+            </p>
+            <button id="openBtn" class="main-btn"> Nhận lời chúc nhé ❤ </button>
+        </div>
+
+        <!-- Khung chứa lời chúc ẩn lúc đầu (Sẽ hiện ra khi bấm) -->
+        <div id="greetingMessage" style="display: none;">
+            <div class="small-text">🪐 GỬI TỪ TRẠM KHÔNG GIAN</div>
+            <h2 style="font-family: 'Dancing Script', cursive; font-size: 2.8rem; color: #ffe082; margin-top: 15px; margin-bottom: 15px;">
+                Happy Vietnamese Women's Day!
+            </h2>
+            <p style="font-size: 1.15rem; line-height: 1.8; max-width: 600px; margin: 0 auto 25px auto; color: #e3f2fd; font-weight: 300;">
+                Giữa vũ trụ bao la, mỗi người phụ nữ chính là một vì sao mang màu sắc và vẻ đẹp riêng biệt. Cảm ơn các chị em vì đã luôn là một phần rực rỡ, mang lại năng lượng tích cực và sự duyên dáng cho văn phòng của chúng ta.<br><br>
+                Chúc tất cả các nữ đồng nghiệp luôn xinh đẹp, hạnh phúc, tràn ngập niềm vui và luôn vững vàng trên con đường sự nghiệp! Mời mọi người cùng thưởng thức một chút socola ngọt ngào nhé! 🍫
+            </p>
+            <button onclick="location.reload()" class="main-btn" style="font-size: 0.9rem; padding: 10px 20px;">Ngắm lại vũ trụ ✨</button>
+        </div>
+    </div>
+</section>
+
+    <canvas id="confetti"></canvas>
+
+    <!-- Script điều khiển các chức năng quà tặng sẵn có của bạn -->
+    <script src="app.js"></script>
+
+    <!-- =========================
+         SCRIPT VŨ TRỤ 3D THUẬT TOÁN (MỚI THÊM)
+    ========================== -->
+    <script>
+        const canvasSky = document.getElementById('skyCanvas');
+        const ctxSky = canvasSky.getContext('2d');
+
+        function resizeSkyCanvas() {
+            canvasSky.width = window.innerWidth;
+            canvasSky.height = window.innerHeight;
+        }
+        resizeSkyCanvas();
+        window.addEventListener('resize', resizeSkyCanvas);
+
+        const STAR_COUNT = 1000; // Số lượng sao (giảm nhẹ để tối ưu khi chạy chung hiệu ứng hoa rơi)
+        const FOV = 250;         
+        let baseSpeed = 1;    // Tốc độ bay tự động nhẹ nhàng hợp không khí lãng mạn
+
+        const stars = [];
+        const starColors = ['#ffffff', '#e3f2fd', '#bbdefb', '#ffe082', '#f3e5f5'];
+
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 2000,
+                y: (Math.random() - 0.5) * 2000,
+                z: Math.random() * 2000,
+                size: Math.random() * 6.0 + 3.0,
+                color: starColors[Math.floor(Math.random() * starColors.length)]
+            });
+        }
+
+        let angleX = 0, angleY = 0;
+        let targetAngleX = 0, targetAngleY = 0;
+        let isDraggingSky = false;
+        let prevMousePos = { x: 0, y: 0 };
+
+        // Xử lý tương tác di chuyển chuột xoay góc nhìn vũ trụ 3D tự do phía sau
+        document.addEventListener('mousedown', (e) => {
+            // Tránh chiếm quyền tương tác nếu người dùng bấm trúng các nút tương tác quà tặng
+            if (e.target.closest('.main-btn') || e.target.closest('.music-btn') || e.target.id === 'openBtn') return;
+            isDraggingSky = true;
+            prevMousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingSky) return;
+            const deltaX = e.clientX - prevMousePos.x;
+            const deltaY = e.clientY - prevMousePos.y;
+
+            targetAngleY += deltaX * 0.002;
+            targetAngleX += deltaY * 0.002;
+            targetAngleX = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, targetAngleX));
+
+            prevMousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mouseup', () => isDraggingSky = false);
+
+        // Chu kỳ vẽ ma trận vũ trụ 3D làm ảnh nền động
+        function renderSky() {
+            ctxSky.fillStyle = '#02020a';
+            ctxSky.fillRect(0, 0, canvasSky.width, canvasSky.height);
+
+            angleX += (targetAngleX - angleX) * 0.08;
+            angleY += (targetAngleY - angleY) * 0.08;
+
+            const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+            const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+
+            const centerX = canvasSky.width / 2;
+            const centerY = canvasSky.height / 2;
+
+            for (let i = 0; i < STAR_COUNT; i++) {
+                const star = stars[i];
+                star.z -= baseSpeed;
+
+                if (star.z <= 0) {
+                    star.z = 2000;
+                    star.x = (Math.random() - 0.5) * 2000;
+                    star.y = (Math.random() - 0.5) * 2000;
+                }
+
+                let x1 = star.x * cosY - star.z * sinY;
+                let z1 = star.x * sinY + star.z * cosY;
+
+                let y2 = star.y * cosX - z1 * sinX;
+                let z2 = star.y * sinX + z1 * cosX;
+
+                if (z2 > 5) {
+                    const scale = FOV / z2;
+                    const screenX = centerX + x1 * scale;
+                    const screenY = centerY + y2 * scale;
+
+                    if (screenX >= 0 && screenX <= canvasSky.width && screenY >= 0 && screenY <= canvasSky.height) {
+                        const r = star.size * scale * 0.5;
+                        const opacity = Math.min(1, (2000 - z2) / 400);
+
+                        ctxSky.beginPath();
+                        ctxSky.arc(screenX, screenY, Math.max(0.2, r), 0, Math.PI * 2);
+                        ctxSky.fillStyle = star.color;
+                        ctxSky.globalAlpha = opacity;
+                        ctxSky.fill();
+                    }
+                }
+            }
+
+            ctxSky.globalAlpha = 1.0;
+            requestAnimationFrame(renderSky);
+        }
+
+        renderSky();
+    </script>
+
+</body>
+</html>
